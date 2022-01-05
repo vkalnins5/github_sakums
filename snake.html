@@ -1,0 +1,217 @@
+<HTML>
+    <head>
+        <title> snake </title>
+    </head>
+
+    <body>
+        <canvas id=myCanvas width=300 height=300 style="background-color: #595959;"> </canvas>
+
+        <script>
+        
+        var ctx = myCanvas.getContext("2d"); 
+        
+        myCanvas.width = window.innerWidth - 20;
+        myCanvas.height = window.innerHeight - 20;
+        
+        var scl = 40;
+        var fps = 10;
+        var vrz = 0;
+        var eaten = false;
+        var gameOver = false;
+        var gone = false;
+        var touchX = 0;
+        var touchY = 0;
+        var phone = false;
+        
+        var rand = Math.random();
+        var foodX = rand * (myCanvas.width - scl) - rand * (myCanvas.width - scl) % scl;
+        rand = Math.random();
+        var foodY = rand * (myCanvas.height - scl) - rand * (myCanvas.height - scl) % scl;
+        
+        function touchstart(event){
+            var rect = myCanvas.getBoundingClientRect();
+            touchX = event.touches[0].clientX - rect.left;                              
+            touchY = event.touches[0].clientY - rect.top;
+            phone = true;
+            
+            if (touchX < snake.x[0] && vrz != 1 && vrz != 3 && gone && !gameOver){
+                snake.velocityX = -scl;
+                snake.velocityY = 0;
+                vrz = 1;
+                gone = false;
+                touchX = 0;
+                touchY = 0;
+            }
+            if (touchY < snake.y[0] && vrz != 2 && vrz != 4 && gone && !gameOver){
+                snake.velocityX = 0;
+                snake.velocityY = -scl;
+                vrz = 2;
+                gone = false;
+                touchX = 0;
+                touchY = 0;
+            }
+            if (touchX > snake.x[0] && vrz != 3 && vrz != 1 && gone && !gameOver){
+                snake.velocityX = scl;
+                snake.velocityY = 0;
+                vrz = 3;
+                gone = false;
+                touchX = 0;
+                touchY = 0;
+            }
+            if (touchY > snake.y[0] && vrz != 4 && vrz != 2 && gone && !gameOver){
+                snake.velocityX = 0;
+                snake.velocityY = scl;
+                vrz = 4;
+                gone = false;
+                touchX = 0;
+                touchY = 0;
+            }
+            if ((touchY != 0 || touchX != 0) && gameOver){
+                startAgain();
+                touchX = 0;
+                touchY = 0;
+            }
+        }
+        
+        function startAgain(){
+            snake.velocityX = 0;
+            snake.velocityY = 0;
+            vrz = 0;
+            eaten = false;
+            gameOver = false;
+                
+            rand = Math.random();
+            foodX = rand * (myCanvas.width - scl) - rand * (myCanvas.width - scl) % scl;
+            rand = Math.random();
+            foodY = rand * (myCanvas.height - scl) - rand * (myCanvas.height - scl) % scl;
+            
+            snake.x = [(myCanvas.width / 2) - (myCanvas.width / 2) % scl];
+            snake.y = [(myCanvas.height / 2) - (myCanvas.height / 2) % scl];
+        }
+        
+        function keydown (MyEvent) {
+            if (MyEvent.keyCode == 37 && (vrz != 3 || snake.x.length == 1) && gone) {//left
+                snake.velocityX = -scl;
+                snake.velocityY = 0;
+                vrz = 1;
+                gone = false;
+            }
+            if (MyEvent.keyCode == 38 && (vrz != 4 || snake.x.length == 1) && gone) {//up
+                snake.velocityX = 0;
+                snake.velocityY = -scl;
+                vrz = 2;
+                gone = false;
+            }
+            if (MyEvent.keyCode == 39 && (vrz != 1 || snake.x.length == 1) && gone) {//right
+                snake.velocityX = scl;
+                snake.velocityY = 0;
+                vrz = 3;
+                gone = false;
+            }
+            if (MyEvent.keyCode == 40 && (vrz != 2 || snake.x.length == 1) && gone) {//down
+                snake.velocityX = 0;
+                snake.velocityY = scl;
+                vrz = 4;
+                gone = false;
+            }
+            if (MyEvent.keyCode == 32 && gameOver) {//space
+                startAgain();
+            }
+            MyEvent.preventDefault();
+        }
+        
+        function snake(){
+            this.x = [(myCanvas.width / 2) - (myCanvas.width / 2) % scl];
+            this.y = [(myCanvas.height / 2) - (myCanvas.height / 2) % scl];
+            this.velocityX = 0;
+            this.velocityY = 0;
+            
+            this.draw = function(){
+                for(var x = 0; x < this.x.length; x++){
+                    ctx.fillStyle = "white";
+                    ctx.strokeStyle = "#595959";
+                    ctx.fillRect(this.x[x], this.y[x], scl, scl);
+                    ctx.strokeRect(this.x[x], this.y[x], scl, scl);
+                }
+            }
+            
+            this.move = function(){
+                for(var x = this.x.length - 1; x >= 0; x--){
+                    this.x[x + 1] = this.x[x];
+                }
+                for(var x = this.y.length - 1; x >= 0; x--){
+                    this.y[x + 1] = this.y[x];
+                }
+                this.x[0] = this.x[1] + this.velocityX;
+                this.y[0] = this.y[1] + this.velocityY;
+                if (!eaten){
+                    this.x.splice(this.x.length - 1, 1);
+                    this.y.splice(this.y.length - 1, 1);
+                }
+                eaten = false;
+            }
+            
+        }
+        
+        
+        
+        function loop(){
+            ctx.clearRect(0, 0, myCanvas.width, myCanvas.height);
+            
+            if (gameOver){
+                if (phone){
+                    ctx.fillStyle = "red";
+                    ctx.font="100px Arial";
+                    ctx.fillText("Game Over", myCanvas.width/2 - 225, myCanvas.height/2);
+                    ctx.font="50px Arial";
+                    ctx.fillText("Press to start again", myCanvas.width/2 - 200, myCanvas.height/2 + 75);
+                }
+                else{
+                    ctx.fillStyle = "red";
+                    ctx.font="50px Arial";
+                    ctx.fillText("Game Over", myCanvas.width/2 - 150, myCanvas.height/2);
+                    ctx.font="30px Arial";
+                    ctx.fillText("Press SPACE to start again", myCanvas.width/2 - 200, myCanvas.height/2 + 50);
+                }
+            }
+            else{
+                ctx.fillStyle = "red";
+                ctx.fillRect(foodX, foodY, scl, scl);
+            
+                snake.move();
+                snake.draw();
+                
+                gone = true;
+            
+                if (snake.x[0] == foodX && snake.y[0] == foodY){
+                    rand = Math.random();
+                    foodX = rand * (myCanvas.width - scl) - rand * (myCanvas.width - scl) % scl;
+                    rand = Math.random();
+                    foodY = rand * (myCanvas.height - scl) - rand * (myCanvas.height - scl) % scl;
+                
+                    eaten = true;
+                }
+            
+                for(var x = 1; x < snake.x.length; x++){
+                    if(snake.x[0] == snake.x[x]){
+                        if(snake.y[0] == snake.y[x]){
+                            gameOver = true;
+                        }
+                    }
+                }
+            
+                if (snake.x[0] < 0 || snake.x[0] + scl > myCanvas.width || snake.y[0] < 0 || snake.y[0] + scl > myCanvas.height){
+                    gameOver = true;
+                }
+            
+            }
+        }
+        var snake = new snake();
+        setInterval(loop, 1000/fps);
+        addEventListener("keydown", keydown);
+        myCanvas.addEventListener("touchstart", touchstart);
+        </script>
+
+    </body>
+</html> 
+
